@@ -1,3 +1,11 @@
+# Author: Lucas Marques Moreno
+# Date: 4/2018 
+# Description: Function designed
+# to communicate with Foil and 
+# retrieve aerodynamics properties
+# this is the Windows Version.
+
+
 import os
 path  ='.\\xfoil_output'
 

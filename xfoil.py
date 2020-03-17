@@ -1,3 +1,10 @@
+# Author: Lucas Marques Moreno
+# Date: 8/2018 
+# Description: Function designed
+# to communicate with Foil and 
+# retrieve aerodynamics properties
+# this is the Linux Version.
+
 import os
 import subprocess as sp
 path  ='.\\xfoil_output'
