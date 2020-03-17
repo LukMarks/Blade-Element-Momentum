@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Apr 26 11:34:10 2018
-
-@author: Lucas
-"""
+# Author: Lucas Marques Moreno
+# Date: 3/2018 
+# Description: class responsible
+# manage airfoil's position
+# and properties
 
 class airfoil:
     def __init__(self,r,rmax,i, alfa):

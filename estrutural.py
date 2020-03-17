@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Aug  2 17:41:52 2018
+# Author: Lucas Marques Moreno
+# Date: 9/2018 
+# Description: Class designed
+# to performe stress calculations
 
-@author: Lucas Moreno
-"""
-#estudo estrututal da helice
-#colocar no final do programa principal
 import numpy as np
 import os 
-import matplotlib.pyplot as plt# importa a biblioteca matplotlib
+import matplotlib.pyplot as plt
 
 def xt(airfoil,c):
         x = []
@@ -19,7 +16,7 @@ def xt(airfoil,c):
         xl = []
         prof_name = airfoil
         f=open(prof_name,'r')
-        #verificar a ordem do ponto lendo de x
+
         Tks = 0
         for line in f:
             X = float(line.strip().split()[0])*c
@@ -59,8 +56,6 @@ def xt(airfoil,c):
                 x_t = x[g]
         '''
         
-        #print('thickness: ',round(100*Tks,1),'%')
-        #print(x_t)
         return Tks,x_t,x,y
 def cone (Di,Df,esp,L,rl):
     
@@ -93,7 +88,7 @@ class struct:
                 D = xt(profile,c[j])
                 d_list.append(D[0])
             De = (10)*1e-3#min(d_list)*0.85
-            print('Diametro externo maximo: ',round(De*1000,2),'mm')
+            print('Maximum external diameter: ',round(De*1000,2),'mm')
         self.normal = []
         self.mflet = []
         r2 = r

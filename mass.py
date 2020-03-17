@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon May 28 09:28:17 2018
+# Author: Lucas Marques Moreno
+# Date: 5/2018 
+# Description: Class designed
+# to estimate the weight of the 
+# blade
 
-@author: Lucas
-"""
 def inte(x,y):
             n = len(x)-1#ver
             A = 0

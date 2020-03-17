@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jul  3 16:34:56 2018
+# Author: Lucas Marques Moreno
+# Date: 8/2018 
+# Description: Class designed
+# to rewrite the airfoil
+# dat file in the blade 
+# section coordenates
 
-@author: 14.02236-2
-"""
-#from xlwt import Workbook
 import numpy as np
 import os
-#import xlrd
 import matplotlib.pyplot as plt
 
 def x_t(airfoil):
@@ -19,7 +18,7 @@ def x_t(airfoil):
         xl = []
         prof_name = airfoil
         f=open(prof_name,'r')
-        #verificar a ordem do ponto lendo de x
+
         Tks = 0
         for line in f:
             X = float(line.strip().split()[0])
@@ -80,10 +79,10 @@ def xt(airfoil,c,phi,x_t,tks,i):
             Z_local = 0.25*c-centerx
         for line in f:
             X = (float(line.strip().split()[0]))*c-Z_local
-            Y = float(line.strip().split()[1])*c#-Z_local*.1
+            Y = float(line.strip().split()[1])*c
          
-            xrot = X*np.cos(phi)+Y*np.sin(phi)#-Z_local*np.cos(phi) #x_t*.25*c*np.cos(phi)
-            yrot = Y*np.cos(phi)-X*np.sin(phi)#-Z_local*np.sin(phi)+tks*.25*c#*np.sin(phi)
+            xrot = X*np.cos(phi)+Y*np.sin(phi)
+            yrot = Y*np.cos(phi)-X*np.sin(phi)
             x.append(xrot)
             y.append(yrot)
         return x,y

@@ -1,3 +1,9 @@
+# Author: Lucas Marques Moreno
+# Date: 4/2018 
+# Description: Class designed
+# to generate the blade chord
+# distribution shape
+
 from bezier import bezier_profiles
 class corda:
     def __init__(self,xa,xi1,xf1,xi2,xf2,ci,Mode,Rf):
