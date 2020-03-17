@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jun 23 16:21:08 2018
-
-@author: Lucas
-"""
-# BEM
 import numpy as np# importa a biblioteca numpy
 import matplotlib.pyplot as plt# importa a biblioteca matplotlib
 import math as m
@@ -13,14 +6,13 @@ import xlrd
 import time
 from corda import corda
 from airfoil import airfoil
-from ve import ve
+
 from xlwt import Workbook
 from xfoil import xfoil
 from mass import mass, S2
 from solid import Solid
 from estrutural import struct
 from bezier import bezier_profiles
-from pot import Pot
 #=====================path Xfoil=================
 start_time = time.time()
 global path
