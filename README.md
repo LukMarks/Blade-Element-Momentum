@@ -3,7 +3,7 @@ A propeller design using BEM
 
 ## Introduction
 
- These scripts were part of my gradruation's project, it's consist in a implementation of the algorithm propoused by **Hensen**. Since the original method was used to design a **turbine** it was necessery to modify some parameters, like the signal of the air speed, to convert it into a **propeller** design. A disclamer here, if you want something more robust i suggest to you to check the [JBLADE](https://sites.google.com/site/joaomorgado23/Home) application. 
+ These scripts were part of my gradruation's project, it consist in a implementation of the algorithm propoused by **Hensen**. Since the original method was used to design a **turbine** it was necessery to modify some parameters, like the signal of the air speed, to convert it into a **propeller** design. A disclamer here, if you want something more robust i suggest to you to check the [JBLADE](https://sites.google.com/site/joaomorgado23/Home) application. 
 
 #### WARNING: Before start it's recommended that you have xfoil, for a greater precision in your design. If you are using a **Windows** operating system you'll have to keep the executable version of **Xfoil** in the same folder of BEM.py, you can donwload it in the official [Xfoil](https://web.mit.edu/drela/Public/web/xfoil/) website, otherwise if you are using a **Linux distribution** you can use the next command to donwload and install it.
 
@@ -12,7 +12,7 @@ sudo apt-get install xfoil
 ```
 ## How to Start
 
-First things first, the main file here is the [BEM.py](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/BEM.py). Inside of it a couple of options will be seted, like:
+First things first, the main file here is the [BEM.py](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/BEM.py). Inside of it a couple of options will be set, like:
 
 - Diameter;
 
@@ -37,7 +37,7 @@ The gif right below shows the program up and running using **Xfoil** functionati
 
 ## Results
 
-At the end of the calculation your console will show the final values for your design, like the next few lines shows:
+At the end of the calculation your console will show the final values for your design, like the next few lines show:
 
 ```
 Time elapsed (m:s):  0.0 : 7.0
@@ -61,7 +61,7 @@ Section(s) failed to converge 0
 Maximum external diameter:  10.0 mm
 
 ```
-With it severel plots will be displayed, The following images illutrates some examples.
+With it several plots will be displayed, The following images illutrate some examples.
 ![angle](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/src%20images/twist_angle.png)
 
 ![shape](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/src%20images/shape.png)
