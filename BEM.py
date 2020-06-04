@@ -22,8 +22,11 @@ class blade:
         self.w = self.rpm*2*np.pi/60 #angular speed
 
         self.phi = []
-        self.theta =[] # twist angle
+        self.theta = [] # twist angle
 
+        self.reynolds = []
+        self.mach = []
+        self.v_sound = 343 #[m/s]
         return
 
     def config(self):
@@ -42,6 +45,10 @@ class blade:
         re = self.p*v*c/self.u
 
         return re
+
+    def mach_number(self,v,v_sound)
+        ma = v/v_sound
+        return ma
     
     def start(self):
 
@@ -67,6 +74,18 @@ class blade:
 
             v_abs = (V_relS**2+V_relC**2)**(1/2)
 
+            re = reynolds_number(v_abs,self.chord[i])
+            self.reynolds.append(re)
 
+            ma = mach_number(v_abs,self.v_sound)
+            self.mach.append(ma)
+
+            Lambda = self.flgiht_speed/vt
+
+            f = (self.number_blades/2)*(1/Lambda)*(1+Lambda**2)**(1/2)*(1-(self.radius[]i/(self.diameter/2)))
+
+            F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
+
+                    
 
         return
