@@ -54,7 +54,7 @@ class blade:
         ma = v/v_sound
         return ma
     
-    def start(self):
+    def induced_factor(self):
 
 
         for i in range(self.radius):
@@ -125,8 +125,43 @@ class blade:
 
         return
 
-    def force(self):
+    def forces(self):
+        self.Thrust = 0
+        self.Momentum = 0
+
+        for i in range(len(self.radius)-1):
+            #Axial forces
+                Yn = (self.pn[i+1]-self.pn[i])/(self.radius[i+1]-self.radius[i])
+                Sn = (self.pn[i]*self.radius[i+1]-self.pn[i+1]*self.radius[i])/(self.radius[i+1]-self.radius[i])
+                PN = Yn*self.radius[i] + Sn
+
+                T = (1/2)* Yn*(self.radius[i+1]**2-self.radius[i]**2)+Sn*(self.radius[i+1]-self.radius[i])
+                self.Thrust = (self.Thrust+T)
+
+            #Radial forces
+
+                Yt = (self.pt[i+1]-self.pt[i])/(self.radius[i+1]-self.radius[i])
+                St = (self.pt[i]*self.radius[i+1]-self.pt[i+1]*self.radius[i])/(self.radius[i+1]-self.radius[i])
+                PT = Yt*self.radius[i] + St
+                M = (1/3)* Yt*(self.radius[i+1]**3-self.radius[i]**3)+(1/2)*St*(self.radius[i+1]**2-self.radius[i]**2)
+                self.Momentum = (self.Momentum+M)
+  
+        self.Thrust = self.Thrust*self.number_blades
+        self.Momentum = self.Momentum*self.number_blades        
+
         return
+
+    def ct(self):
+        self.ct = self.Thrust /(self.p*((self.rpm/60)**2)*(self.diameter**4))
+        return self.ct
+
+    def cp(self):
+        power_required = self.Thrust*self.flgiht_speed
+        self.cp = (power_required)/(self.p*((self.rpm/60)**3)*(self.diameter**5))
+        return self.cp
+
+    def self.efficiancy(self):
+        return  (self.ct*self.Jo)/self.cp
 
     def plot_blade(self):
         hub_x=[]
