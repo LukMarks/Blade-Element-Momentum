@@ -21,7 +21,7 @@ class blade:
 
         self.w = self.rpm*2*np.pi/60 #angular speed
 
-        self.Phi = []
+        self.phi = []
         self.theta =[] # twist angle
 
         return
@@ -36,19 +36,37 @@ class blade:
         self.Jo = self.flgiht_speed*(self.diameter/(self.rpm/60))
         
         return
+
+    def reynolds_number(self,v,c)
+
+        re = self.p*v*c/self.u
+
+        return re
     
     def start(self):
 
 
         for i in range(self.radius):
-            r = self.radius[i]
+
             alpha = alphaD*np.pi/180
-            A = a[-1]
-            a_l = a[-1]
-            vt = self.w * r
-            Tan_phi = Tan_phi = ((1+A)*self.flgiht_speed)/((1-A_l)*Vt)
-            phi = np.arctan(Tan_phi)
-            self.Phi.append(phi)
+            
+            #A = a[i]
+            #a_l = a_l[i]#a[-1]
+            
+            vt = self.w * self.radius[i]
+            Tan_phi = Tan_phi = ((1+a[i])*self.flgiht_speed)/((1-a_l[i])*Vt)
+            Phi = np.arctan(Tan_phi)
+            self.phi.append(Phi)
+            self.theta.append((Phi-alpha)*180/np.pi)
+
+            #todo add here function to speed variations test
+
+            #v_rel = (self.flgiht_speed**2+(Vt)**2)**(1/2)
+            V_relS = Vo*(1+a[i])
+            V_relC = Vt*(1-a_l[i])
+
+            v_abs = (V_relS**2+V_relC**2)**(1/2)
+
 
 
         return
