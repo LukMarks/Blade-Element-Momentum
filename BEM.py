@@ -172,7 +172,7 @@ class blade:
         r_dir=[self.radius[-1],r_dir=[self.radius[-1]]
 
         plt.figure(1)
-        plt.plot(r,c)
+        plt.plot(self.radius,self.chord)
         plt.plot(r_esq,l_esq)
         plt.plot(r_dir,l_dir)
         plt.plot(hub_x,hub_y)
