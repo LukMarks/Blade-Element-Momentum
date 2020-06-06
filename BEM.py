@@ -70,7 +70,6 @@ class blade:
         return self.ma
 
     def select_section(self,current_radius):
-     
         if current_radius <= self.changes_section[self.current_section]:
             self.current_airfoil = self.airfoil[self.current_section]
             self.current_alfa = self.angle_of_attack[self.current_section]
@@ -85,8 +84,8 @@ class blade:
         #TODO fix convergencie
         Coef = list()
         os.remove("xfoil_output.txt")
-        itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', round(self.ma,2),round(self.re,),inter,np]
-        print(itens)
+        itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', round(self.ma,2),int(self.re),inter,np]
+
         if platform.system() =='Linux':
                
                 name = '\n'+itens[0]
@@ -95,7 +94,7 @@ class blade:
                 inter = '\n'+str(itens[6])
                 mach = '\n'+str(itens[4])
                 np = '\n'+str(itens[7])
-                path = 'load'+name+'\npane\nppar\nn'+np+'\n\n\noper\nvisc'+rey+'\nmach'+mach+'\niter'+inter+'\npacc\nxfoil_output.txt\n\naseq'+alfa+alfa+'\n\n\nquit'
+                path = 'load'+name+'\npane\nppar\nn'+np+'\n\n\noper\nvisc'+rey+'\nmach'+mach+'\niter'+inter+'\npacc\nxfoil_output.txt\n\naseq'+alfa+alfa+'\n0\n\nquit'
                 n = path
                 p = sp.Popen(['xfoil'],
 		        stdin=sp.PIPE,
@@ -171,18 +170,15 @@ class blade:
             self.Cl =0.0000001
             self.Cd =0.0000001
             
-            #Coef.append(Cl)
-            #Coef.append(Cd)
 
             j +=1
-            #Coef.append(j)
+
         else:
             self.Cl =float(cl[-1])
             self.Cd =float(cd[-1])
-            #Coef.append(Cl)
-            #Coef.append(Cd)
+
             j=j
-            #Coef.append(j)
+
 
         return
 
@@ -200,11 +196,9 @@ class blade:
 
 
         for i in range(len(self.radius)):
-
-            self.select_section(self.radius[i])
+            if self.radius[i] != self.radius[-1]:
+                self.select_section(self.radius[i])
             
-            #A = a[i]
-            #a_l = a_l[i]#a[-1]
             
             Vt = self.w * self.radius[i]
             Tan_phi = Tan_phi = ((1+self.a[i])*self.flgiht_speed)/((1-self.a_l[i])*Vt)
@@ -239,7 +233,7 @@ class blade:
             F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
 
             self.xfoil()
-            print(self.Cl,"       " ,self.Cd)
+            print("Cl: ",self.Cl,"       " ,"Cd: ",self.Cd)
             L = (1/2)*self.p*self.chord[i]*self.Cl*v_rel**2
             Dr = (1/2)*self.p*self.chord[i]*self.Cd*v_rel**2 
             Cn = self.Cl*np.cos(Phi)+self.Cd*np.sin(Phi)
