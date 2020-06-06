@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 class blade:
-    def __init__(self, v, rpm, B, d, r, c, g, p, u):
+    def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, g, p, u):
         
         self.flgiht_speed = v
         self.rpm = rpm
@@ -11,6 +11,8 @@ class blade:
         self.diameter = d
         self.radius = r
         self.chord = c
+        self.alfa = alfa
+        self.airfoil = airfoil
         self.g = g # gravity acceleration
         self.p = p #specific mass
         self.u = u #dynamic viscosity
