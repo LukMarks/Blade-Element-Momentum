@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
+import platform
+import subprocess as sp
 
 class blade:
     def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, changes_section, g, p, u):
@@ -70,13 +71,13 @@ class blade:
 
     def select_section(self):
 
-        if self.radius <= self.changes_section[self.current_section]:
-            self.current_airfoil = self.airfoil[current_section]
-            self.current_alfa = self.angle_of_attack[i]
+        if self.radius[self.current_section] <= self.changes_section[self.current_section]:
+            self.current_airfoil = self.airfoil[self.current_section]
+            self.current_alfa = self.angle_of_attack[self.current_section]
         else:
             self.current_section += 1
-            self.current_airfoil = self.airfoil[current_section]
-            self.current_alfa = self.angle_of_attack[i]     
+            self.current_airfoil = self.airfoil[self.current_section]
+            self.current_alfa = self.angle_of_attack[self.current_section]     
         
         return
     
@@ -169,18 +170,18 @@ class blade:
             self.Cl =0.0000001
             self.Cd =0.0000001
             
-            Coef.append(Cl)
-            Coef.append(Cd)
+            #Coef.append(Cl)
+            #Coef.append(Cd)
 
             j +=1
-            Coef.append(j)
+            #Coef.append(j)
         else:
             self.Cl =float(cl[-1])
             self.Cd =float(cd[-1])
-            Coef.append(Cl)
-            Coef.append(Cd)
+            #Coef.append(Cl)
+            #Coef.append(Cd)
             j=j
-            Coef.append(j)
+            #Coef.append(j)
 
         return
 
@@ -200,13 +201,13 @@ class blade:
         for i in range(len(self.radius)):
 
 
-            select_section()
+            self.select_section()
             
             #A = a[i]
             #a_l = a_l[i]#a[-1]
             
-            vt = self.w * self.radius[i]
-            Tan_phi = Tan_phi = ((1+a[i])*self.flgiht_speed)/((1-a_l[i])*Vt)
+            Vt = self.w * self.radius[i]
+            Tan_phi = Tan_phi = ((1+self.a[i])*self.flgiht_speed)/((1-self.a_l[i])*Vt)
             Phi = np.arctan(Tan_phi)
             self.phi.append(Phi)
             self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
@@ -214,32 +215,32 @@ class blade:
             #todo add here function to speed variations test
 
             if self.speed_test:
-                Phi = velocity_curve(self.theta[-1],self.theta_ref[i])
+                Phi = self.velocity_curve(self.theta[-1],self.theta_ref[i])
 
             self.phi.append(Phi)
             self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
 
             v_rel = (self.flgiht_speed**2+(Vt)**2)**(1/2)
-            V_relS = Vo*(1+a[i])
-            V_relC = Vt*(1-a_l[i])
+            V_relS = self.flgiht_speed*(1+self.a[i])
+            V_relC = Vt*(1-self.a_l[i])
 
             v_abs = (V_relS**2+V_relC**2)**(1/2)
 
-            re = reynolds_number(v_abs,self.chord[i])
+            re = self.reynolds_number(v_abs,self.chord[i])
             self.reynolds.append(re)
 
-            ma = mach_number(v_abs,self.v_sound)
+            ma = self.mach_number(v_abs,self.v_sound)
             self.mach.append(ma)
 
-            Lambda = self.flgiht_speed/vt
+            Lambda = self.flgiht_speed/Vt
 
             f = (self.number_blades/2)*(1/Lambda)*(1+Lambda**2)**(1/2)*(1-(self.radius[i]/(self.diameter/2)))
 
             F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
 
-            xfoil()
-
-            L = (1/2)*self.p*self.chord *self.Cl*v_rel**2
+            self.xfoil()
+            print(self.Cl)
+            L = (1/2)*self.p*self.chord*self.Cl[-1]*v_rel**2
             Dr = (1/2)*self.p*self.chord*self.Cd*v_rel**2 
             Cn = self.Cl*np.cos(Phi)+self.Cd*np.sin(Phi)
             Ct = self.Cl*np.sin(Phi)-self.Cd*np.cos(Phi)
@@ -306,6 +307,9 @@ class blade:
         return self.cp
 
     def efficiancy(self):
+        self.ct()
+        self.cp()
+        self.advance_ratio()
         self.efficiancy = (self.ct*self.Jo)/self.cp
         return  self.efficiancy
 
