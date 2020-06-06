@@ -34,4 +34,5 @@ airfoils = ["profile0.out",
 propeller = bm.blade(vo, rpm, B, D, r,c,Ang_at,airfoils,R_max,g,p,u)
 propeller.config()
 propeller.induced_factor()
-#propeller.forces()
+propeller.forces()
+print(propeller.Thrust)
