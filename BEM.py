@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 class blade:
-    def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, g, p, u):
+    def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, changes_section, g, p, u):
         
         self.flgiht_speed = v
         self.rpm = rpm
@@ -11,13 +11,15 @@ class blade:
         self.diameter = d
         self.radius = r
         self.chord = c
-        self.alfa = alfa
+        self.angle_of_attack = alfa
         self.airfoil = airfoil
         self.g = g # gravity acceleration
         self.p = p #specific mass
         self.u = u #dynamic viscosity
 
-  
+        self.current_section = 0 #initial section
+        self.changes_section = changes_section
+
         self.a = [0] # induced factor
         self.a_l = [0] # radial imduced factor
         self.a_critic = 0.4
@@ -55,13 +57,30 @@ class blade:
     def mach_number(self,v,v_sound)
         ma = v/v_sound
         return ma
+
+    def select_section(self):
+        self.i = i
+        self.r = r
+        self.rmax = rmax
+        self.n = len(self.rmax)
+
+        if self.radius <= self.changes_section[self.current_section]:
+            self.current_airfoil = self.airfoil[current_section]
+            self.current_alfa = self.angle_of_attack[i]
+        else:
+            self.current_section += 1
+            self.current_airfoil = self.airfoil[current_section]
+            self.current_alfa = self.angle_of_attack[i]     
+        
+        return
     
     def induced_factor(self):
 
 
         for i in range(self.radius):
 
-            alpha = alphaD*np.pi/180
+
+            select_section()
             
             #A = a[i]
             #a_l = a_l[i]#a[-1]
@@ -70,7 +89,7 @@ class blade:
             Tan_phi = Tan_phi = ((1+a[i])*self.flgiht_speed)/((1-a_l[i])*Vt)
             Phi = np.arctan(Tan_phi)
             self.phi.append(Phi)
-            self.theta.append((Phi-alpha)*180/np.pi)
+            self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
 
             #todo add here function to speed variations test
 
