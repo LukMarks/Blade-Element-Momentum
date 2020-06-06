@@ -69,9 +69,9 @@ class blade:
         self.ma = v/v_sound
         return self.ma
 
-    def select_section(self):
-
-        if self.radius[self.current_section] <= self.changes_section[self.current_section]:
+    def select_section(self,current_radius):
+     
+        if current_radius <= self.changes_section[self.current_section]:
             self.current_airfoil = self.airfoil[self.current_section]
             self.current_alfa = self.angle_of_attack[self.current_section]
         else:
@@ -82,10 +82,11 @@ class blade:
         return
     
     def xfoil(self,inter = 200 , np = 220):
+        #TODO fix convergencie
         Coef = list()
         os.remove("xfoil_output.txt")
         itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', round(self.ma,2),round(self.re,),inter,np]
-
+        print(itens)
         if platform.system() =='Linux':
                
                 name = '\n'+itens[0]
@@ -94,7 +95,7 @@ class blade:
                 inter = '\n'+str(itens[6])
                 mach = '\n'+str(itens[4])
                 np = '\n'+str(itens[7])
-                path = 'load'+name+'\npane\nppar\nn'+np+'\n\n\noper\nvisc'+rey+'\nmach'+mach+'\niter'+inter+'\npacc\nxfoil_output.txt\n\naseq'+alfa+alfa+'\n1\n\nquit'
+                path = 'load'+name+'\npane\nppar\nn'+np+'\n\n\noper\nvisc'+rey+'\nmach'+mach+'\niter'+inter+'\npacc\nxfoil_output.txt\n\naseq'+alfa+alfa+'\n\n\nquit'
                 n = path
                 p = sp.Popen(['xfoil'],
 		        stdin=sp.PIPE,
@@ -200,8 +201,7 @@ class blade:
 
         for i in range(len(self.radius)):
 
-
-            self.select_section()
+            self.select_section(self.radius[i])
             
             #A = a[i]
             #a_l = a_l[i]#a[-1]
@@ -239,7 +239,7 @@ class blade:
             F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
 
             self.xfoil()
-         
+            print(self.Cl,"       " ,self.Cd)
             L = (1/2)*self.p*self.chord[i]*self.Cl*v_rel**2
             Dr = (1/2)*self.p*self.chord[i]*self.Cd*v_rel**2 
             Cn = self.Cl*np.cos(Phi)+self.Cd*np.sin(Phi)
@@ -291,7 +291,7 @@ class blade:
                 PT = Yt*self.radius[i] + St
                 M = (1/3)* Yt*(self.radius[i+1]**3-self.radius[i]**3)+(1/2)*St*(self.radius[i+1]**2-self.radius[i]**2)
                 self.Momentum = (self.Momentum+M)
-  
+
         self.Thrust = self.Thrust*self.number_blades
         self.Momentum = self.Momentum*self.number_blades        
 
@@ -319,12 +319,12 @@ class blade:
         l_esq=[0,self.chord[0]]
         r_esq=[self.radius[0],self.radius[0]]
         l_dir=[0,self.chord[-1]]
-        r_dir=[self.radius[-1],[self.radius[-1]]]
+        r_dir=[self.radius[-1],self.radius[-1]]
 
         plt.figure(1)
         plt.plot(self.radius,self.chord)
         plt.plot(r_esq,l_esq)
         plt.plot(r_dir,l_dir)
         plt.plot(hub_x,hub_y)
-
+        plt.show()
         return
