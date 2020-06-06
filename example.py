@@ -15,7 +15,6 @@ c=[]#[m] lista com os comprimentos da corda
 for i in range(0,len(prop[0])):
     r.append(float(prop[0][i]))
     c.append(float(prop[1][i]))
-
 g = 9.81#[m/s²] aceleração da gravidade
 p = 1.08#[kg/m³] massa especifica do ar(1.225)
 u = 1.4607*10**(-5)#[N.s/m²] viscosidade dinamica do a 18.20*10**(-6) #
