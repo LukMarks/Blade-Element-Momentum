@@ -36,11 +36,20 @@ class blade:
 
         self.pn = []
         self.pt = []
+
         return
 
-    def config(self):
-        pass
+    def config(self, correction = True, speed_test = False):
+        
+        self.correction = correction
+        self.speed_test = speed_test 
 
+        return
+
+    def twist_angle_reference(self,theta_ref):
+
+        self.theta_ref = theta_ref
+        
         return
 
     def advance_ratio(self):
@@ -49,21 +58,17 @@ class blade:
         
         return
 
-    def reynolds_number(self,v,c)
+    def reynolds_number(self,v,c):
 
-        re = self.p*v*c/self.u
+        self.re = self.p*v*c/self.u
 
-        return re
+        return self.re
 
-    def mach_number(self,v,v_sound)
-        ma = v/v_sound
-        return ma
+    def mach_number(self,v,v_sound):
+        self.ma = v/v_sound
+        return self.ma
 
     def select_section(self):
-        self.i = i
-        self.r = r
-        self.rmax = rmax
-        self.n = len(self.rmax)
 
         if self.radius <= self.changes_section[self.current_section]:
             self.current_airfoil = self.airfoil[current_section]
@@ -78,7 +83,7 @@ class blade:
     def xfoil(self,inter = 200 , np = 220):
         Coef = list()
         os.remove("xfoil_output.txt")
-        itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', self.ma,self.re,inter,np ]
+        itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', self.ma,self.re,inter,np]
 
         if platform.system() =='Linux':
                
@@ -142,15 +147,15 @@ class blade:
         for line in f:
             if (i > 11):
 
-            aoa.append(line.strip().split()[0])
-            cl.append(line.strip().split()[1])
-            cd.append(line.strip().split()[2])
-            cdp.append(line.strip().split()[3])
-            cm.append(line.strip().split()[4])
-            xutr.append(line.strip().split()[5])
-            xltr.append(line.strip().split()[6])
-            #print((line.strip().split()[6]))
-            res = float(line.strip().split()[2])
+                aoa.append(line.strip().split()[0])
+                cl.append(line.strip().split()[1])
+                cd.append(line.strip().split()[2])
+                cdp.append(line.strip().split()[3])
+                cm.append(line.strip().split()[4])
+                xutr.append(line.strip().split()[5])
+                xltr.append(line.strip().split()[6])
+                #print((line.strip().split()[6]))
+                res = float(line.strip().split()[2])
             else:
                 res = 1.0
             i += 1
@@ -161,20 +166,17 @@ class blade:
         j = 0
 
         if len(cl)==0:
-            Cl =0.0000001#float(L[len(cl)-1])
-            Cd =0.0000001#float(D[len(cd)-1])
-            #if len(L)==0:
-            #   Cl =float(L[len(cl)-2])
-            #  Cd =float(D[len(cd)-2])
-
+            self.Cl =0.0000001
+            self.Cd =0.0000001
+            
             Coef.append(Cl)
             Coef.append(Cd)
-            #print('não foi')
+
             j +=1
             Coef.append(j)
         else:
-            Cl =float(cl[len(cl)-1])
-            Cd =float(cd[len(cd)-1])
+            self.Cl =float(cl[-1])
+            self.Cd =float(cd[-1])
             Coef.append(Cl)
             Coef.append(Cd)
             j=j
@@ -182,10 +184,20 @@ class blade:
 
         return
 
+    def velocity_curve(self, Theta, theta_ref):
+
+        gamma= theta_ref*np.pi/180 - Theta
+        print("Gamma angle: ",round(gamma*180/np.pi,1))
+        self.current_alfa += (gamma*180/np.pi)
+        print("New Alfa angle: ",round(self.current_alfa ,1))
+        phi = (theta_ref+ self.current_alfa)*np.pi/180  
+        
+        return phi
+
     def induced_factor(self):
 
 
-        for i in range(self.radius):
+        for i in range(len(self.radius)):
 
 
             select_section()
@@ -201,6 +213,12 @@ class blade:
 
             #todo add here function to speed variations test
 
+            if self.speed_test:
+                Phi = velocity_curve(self.theta[-1],self.theta_ref[i])
+
+            self.phi.append(Phi)
+            self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
+
             v_rel = (self.flgiht_speed**2+(Vt)**2)**(1/2)
             V_relS = Vo*(1+a[i])
             V_relC = Vt*(1-a_l[i])
@@ -215,18 +233,16 @@ class blade:
 
             Lambda = self.flgiht_speed/vt
 
-            f = (self.number_blades/2)*(1/Lambda)*(1+Lambda**2)**(1/2)*(1-(self.radius[]i/(self.diameter/2)))
+            f = (self.number_blades/2)*(1/Lambda)*(1+Lambda**2)**(1/2)*(1-(self.radius[i]/(self.diameter/2)))
 
             F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
 
-            #=============================================
-            #todo add xfoil
-            #=============================================
+            xfoil()
 
-            L = (1/2)*self.p*self.chord *Cl*v_rel**2
-            Dr = (1/2)*self.p*self.chord*Cd*v_rel**2 
-            Cn = Cl*np.cos(Phi)+Cd*np.sin(Phi)
-            Ct = Cl*np.sin(Phi)-Cd*np.cos(Phi)
+            L = (1/2)*self.p*self.chord *self.Cl*v_rel**2
+            Dr = (1/2)*self.p*self.chord*self.Cd*v_rel**2 
+            Cn = self.Cl*np.cos(Phi)+self.Cd*np.sin(Phi)
+            Ct = self.Cl*np.sin(Phi)-self.Cd*np.cos(Phi)
             
             sigma = self.chord*self.number_blades/(2*np.pi*self.radius[i])
             I1 = 4*np.sin(Phi)**2
@@ -237,17 +253,17 @@ class blade:
             I4 = sigma*Ct
             self.a_l.append(1/((I3/I4)+1))
 
-            #hansen correction
+            if self.correction :
 
-            if self.a[i] >self.a_critic :
-                a.pop()
-                K_h = 4*F*np.sin(Phi)**2/(sigma*Cn)
-                a.append((1/2)*(2+K_h*(1-2*ac)-((K_h*(1-2*ac)+2)**2+4*(K_h*ac**2-1))**(1/2)))
+                if self.a[i] >self.a_critic :
+                    a.pop()
+                    K_h = 4*F*np.sin(Phi)**2/(sigma*Cn)
+                    a.append((1/2)*(2+K_h*(1-2*ac)-((K_h*(1-2*ac)+2)**2+4*(K_h*ac**2-1))**(1/2)))
 
-            if a[i] <= (1/3):
-                Ct = 4*a[i]*(1-[ai])*F
-            else:
-                Ct = 4*a[i]*(1-(1/4)*(5-3*a[i])*a[i])*F
+                if a[i] <= (1/3):
+                    Ct = 4*a[i]*(1-[ai])*F
+                else:
+                    Ct = 4*a[i]*(1-(1/4)*(5-3*a[i])*a[i])*F
 
             self.pn.append((1/2)*self.p*self.chord*Cn*v_rel**2)
             self.pt.append((1/2)*self.p*self.chord*Ct*v_rel**2)
@@ -289,8 +305,9 @@ class blade:
         self.cp = (power_required)/(self.p*((self.rpm/60)**3)*(self.diameter**5))
         return self.cp
 
-    def self.efficiancy(self):
-        return  (self.ct*self.Jo)/self.cp
+    def efficiancy(self):
+        self.efficiancy = (self.ct*self.Jo)/self.cp
+        return  self.efficiancy
 
     def plot_blade(self):
         hub_x=[]
@@ -298,7 +315,7 @@ class blade:
         l_esq=[0,self.chord[0]]
         r_esq=[self.radius[0],self.radius[0]]
         l_dir=[0,self.chord[-1]]
-        r_dir=[self.radius[-1],r_dir=[self.radius[-1]]
+        r_dir=[self.radius[-1],[self.radius[-1]]]
 
         plt.figure(1)
         plt.plot(self.radius,self.chord)
