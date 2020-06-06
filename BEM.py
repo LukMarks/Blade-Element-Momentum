@@ -84,7 +84,7 @@ class blade:
     def xfoil(self,inter = 200 , np = 220):
         Coef = list()
         os.remove("xfoil_output.txt")
-        itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', self.ma,self.re,inter,np]
+        itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', round(self.ma,2),round(self.re,),inter,np]
 
         if platform.system() =='Linux':
                
@@ -239,13 +239,13 @@ class blade:
             F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
 
             self.xfoil()
-            print(self.Cl)
-            L = (1/2)*self.p*self.chord*self.Cl[-1]*v_rel**2
-            Dr = (1/2)*self.p*self.chord*self.Cd*v_rel**2 
+         
+            L = (1/2)*self.p*self.chord[i]*self.Cl*v_rel**2
+            Dr = (1/2)*self.p*self.chord[i]*self.Cd*v_rel**2 
             Cn = self.Cl*np.cos(Phi)+self.Cd*np.sin(Phi)
             Ct = self.Cl*np.sin(Phi)-self.Cd*np.cos(Phi)
             
-            sigma = self.chord*self.number_blades/(2*np.pi*self.radius[i])
+            sigma = self.chord[i]*self.number_blades/(2*np.pi*self.radius[i])
             I1 = 4*np.sin(Phi)**2
             I2 = sigma*Cn
             self.a.append(1/((I1/I2)-1))
@@ -261,13 +261,13 @@ class blade:
                     K_h = 4*F*np.sin(Phi)**2/(sigma*Cn)
                     a.append((1/2)*(2+K_h*(1-2*ac)-((K_h*(1-2*ac)+2)**2+4*(K_h*ac**2-1))**(1/2)))
 
-                if a[i] <= (1/3):
-                    Ct = 4*a[i]*(1-[ai])*F
+                if self.a[i] <= (1/3):
+                    Ct = 4*self.a[i]*(1-self.a[i])*F
                 else:
-                    Ct = 4*a[i]*(1-(1/4)*(5-3*a[i])*a[i])*F
+                    Ct = 4*self.a[i]*(1-(1/4)*(5-3*self.a[i])*self.a[i])*F
 
-            self.pn.append((1/2)*self.p*self.chord*Cn*v_rel**2)
-            self.pt.append((1/2)*self.p*self.chord*Ct*v_rel**2)
+            self.pn.append((1/2)*self.p*self.chord[i]*Cn*v_rel**2)
+            self.pt.append((1/2)*self.p*self.chord[i]*Ct*v_rel**2)
 
         return
 
