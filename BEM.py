@@ -42,10 +42,11 @@ class blade:
 
         return
 
-    def config(self, correction = True, speed_test = False):
+    def config(self, correction = True, speed_test = False, export_sections = True):
         
         self.correction = correction
         self.speed_test = speed_test 
+        self.export_sections = export_sections
 
         return
 
@@ -264,6 +265,10 @@ class blade:
 
             self.pn.append((1/2)*self.p*self.chord[i]*Cn*v_rel**2)
             self.pt.append((1/2)*self.p*self.chord[i]*Ct*v_rel**2)
+            
+            if self.export_sections:
+                self.export_section(i)
+                
 
         return
 
@@ -326,7 +331,7 @@ class blade:
         return
 
 
-    def airfoil_max_thickness(airfoil):
+    def airfoil_max_thickness(self,airfoil):
         x = []
         y = []
         yu = []
@@ -369,7 +374,7 @@ class blade:
         return tks, x_t
 
 
-    def rotational_matrix(airfoil,c,phi,x_t,tks,i):
+    def rotational_matrix(self,airfoil,c,phi,x_t,tks,i):
         x = []
         y = []
         yu = []
@@ -394,9 +399,22 @@ class blade:
             y.append(yrot)
         return x,y
     
-    def export_sections(self):
-
+    def export_section(self,i):
         
+        tks,pos= self.airfoil_max_thickness(self.current_airfoil)
+
+        G = self.rotational_matrix(self.current_airfoil, self.chord[i], self.phi[i], pos, tks, i)
+        self.x = G[0]
+        self.y = G[1]
+        n = self.radius[i]*1000
+        name_file = 'R'+str(int(n))+'.txt'
+
+        f=open(name_file,'w')
+        for i in range(0,len(self.x)):
+         f.write('%s \t' % (str(self.x[i])))
+         f.write('%s \t' % (str(self.y[i])))
+         f.write('%s \n' % (str(n/1000)))
+        f.close()
         
         return
 
@@ -405,5 +423,9 @@ class blade:
         return
 
     def cad_priveiw(self):
-        pass
+        fig = plt.figure(20)
+        ax = fig.add_subplot(111, projection='3d')
+
+        #Axes3D.scatter(xs=t, ys=p, zs=v, zdir='z', s=20, c=None, depthshade=True)
+        ax.scatter(self.x, self.y, self.radius)
         return
