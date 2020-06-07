@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import os
 import platform
 import subprocess as sp
+from mpl_toolkits.mplot3d import Axes3D
+
 
 class blade:
     def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, changes_section, g, p, u):
@@ -291,21 +293,21 @@ class blade:
 
         return
 
-    def ct(self):
+    def Ct(self):
         self.ct = self.Thrust /(self.p*((self.rpm/60)**2)*(self.diameter**4))
         return self.ct
 
-    def cp(self):
+    def Cp(self):
         power_required = self.Thrust*self.flgiht_speed
         self.cp = (power_required)/(self.p*((self.rpm/60)**3)*(self.diameter**5))
         return self.cp
 
-    def efficiancy(self):
-        self.ct()
-        self.cp()
+    def Efficiency(self):
+        self.Ct()
+        self.Cp()
         self.advance_ratio()
-        self.efficiancy = (self.ct*self.Jo)/self.cp
-        return  self.efficiancy
+        self.efficiency = (self.ct*self.Jo)/self.cp
+        return  self.efficiency
 
     def plot_blade(self):
         hub_x=[]
@@ -321,4 +323,16 @@ class blade:
         plt.plot(r_dir,l_dir)
         plt.plot(hub_x,hub_y)
         plt.show()
+        return
+    
+    def export_sections(self):
+        pass
+        return
+
+    def export_cad(self):
+        pass
+        return
+        
+    def cad_priveiw(self):
+        pass
         return
