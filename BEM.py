@@ -324,15 +324,86 @@ class blade:
         plt.plot(hub_x,hub_y)
         plt.show()
         return
+
+
+    def airfoil_max_thickness(airfoil):
+        x = []
+        y = []
+        yu = []
+        xu = []
+        yl =[]
+        xl = []
+        prof_name = airfoil
+        f=open(prof_name,'r')
+
+        Tks = 0
+        for line in f:
+            X = float(line.strip().split()[0])
+            Y = float(line.strip().split()[1])
+            x.append(X)
+            y.append(Y)
+
+
+
+        for i in range(1,len(x)):
+            if x[i]<x[i-1]:
+                cp = i+1
+
+        for i in range(0,cp):
+            xu.append(x[i])
+            yu.append(y[i])
+
+        y.reverse()
+        for i in range(cp, len(x)):
+            xl.append(x[i])
+            yl.append(y[i])
+
+        for i in range(0,len(yl)):
+                for j in range(0,len(yu)):
+                    tks = abs(yu[j]-yl[i])
+                    if Tks<tks:
+                        Tks=tks
+                        ref1 = y[i]
+                        ref2 = y[j]
+                        x_t = xl[i]
+        return tks, x_t
+
+
+    def rotational_matrix(airfoil,c,phi,x_t,tks,i):
+        x = []
+        y = []
+        yu = []
+        xu = []
+        yl =[]
+        xl = []           
+        prof_name = airfoil
+        f=open(prof_name,'r')
+        if i == 0:
+            centerx = c*.25
+            Z_local = centerx
+        else:
+            centerx = 0
+            Z_local = 0.25*c-centerx
+        for line in f:
+            X = (float(line.strip().split()[0]))*c-Z_local
+            Y = float(line.strip().split()[1])*c
+         
+            xrot = X*np.cos(phi)+Y*np.sin(phi)
+            yrot = Y*np.cos(phi)-X*np.sin(phi)
+            x.append(xrot)
+            y.append(yrot)
+        return x,y
     
     def export_sections(self):
-        pass
+
+        
+        
         return
 
     def export_cad(self):
         pass
         return
-        
+
     def cad_priveiw(self):
         pass
         return
