@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 class blade:
     def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, changes_section, g, p, u):
         
-        self.flgiht_speed = v
+        self.flight_speed = v
         self.rpm = rpm
         self.number_blades = B
         self.diameter = d
@@ -59,7 +59,7 @@ class blade:
 
     def advance_ratio(self):
         
-        self.Jo = self.flgiht_speed/(self.diameter*(self.rpm/60))
+        self.Jo = self.flight_speed/(self.diameter*(self.rpm/60))
         
         return
 
@@ -205,7 +205,7 @@ class blade:
             
             
             Vt = self.w * self.radius[i]
-            Tan_phi = Tan_phi = ((1+self.a[i])*self.flgiht_speed)/((1-self.a_l[i])*Vt)
+            Tan_phi = Tan_phi = ((1+self.a[i])*self.flight_speed)/((1-self.a_l[i])*Vt)
             Phi = np.arctan(Tan_phi)
             self.phi.append(Phi)
             self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
@@ -218,8 +218,8 @@ class blade:
             self.phi.append(Phi)
             self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
 
-            v_rel = (self.flgiht_speed**2+(Vt)**2)**(1/2)
-            V_relS = self.flgiht_speed*(1+self.a[i])
+            v_rel = (self.flight_speed**2+(Vt)**2)**(1/2)
+            V_relS = self.flight_speed*(1+self.a[i])
             V_relC = Vt*(1-self.a_l[i])
 
             v_abs = (V_relS**2+V_relC**2)**(1/2)
@@ -230,7 +230,7 @@ class blade:
             ma = self.mach_number(v_abs,self.v_sound)
             self.mach.append(ma)
 
-            Lambda = self.flgiht_speed/Vt
+            Lambda = self.flight_speed/Vt
 
             f = (self.number_blades/2)*(1/Lambda)*(1+Lambda**2)**(1/2)*(1-(self.radius[i]/(self.diameter/2)))
 
@@ -277,8 +277,8 @@ class blade:
         return
 
     def forces(self):
-        self.Thrust = 0
-        self.Momentum = 0
+        self.thrust = 0
+        self.momentum = 0
 
         for i in range(len(self.radius)-1):
             #Axial forces
@@ -287,7 +287,7 @@ class blade:
                 PN = Yn*self.radius[i] + Sn
 
                 T = (1/2)* Yn*(self.radius[i+1]**2-self.radius[i]**2)+Sn*(self.radius[i+1]-self.radius[i])
-                self.Thrust = (self.Thrust+T)
+                self.thrust = (self.thrust+T)
 
             #Radial forces
 
@@ -295,27 +295,26 @@ class blade:
                 St = (self.pt[i]*self.radius[i+1]-self.pt[i+1]*self.radius[i])/(self.radius[i+1]-self.radius[i])
                 PT = Yt*self.radius[i] + St
                 M = (1/3)* Yt*(self.radius[i+1]**3-self.radius[i]**3)+(1/2)*St*(self.radius[i+1]**2-self.radius[i]**2)
-                self.Momentum = (self.Momentum+M)
+                self.momentum = (self.momentum+M)
 
-        self.Thrust = self.Thrust*self.number_blades
-        self.Momentum = self.Momentum*self.number_blades        
+        self.thrust = self.thrust*self.number_blades
+        self.momentum = self.momentum*self.number_blades        
 
         return
 
     def Ct(self):
-        self.ct = self.Thrust /(self.p*((self.rpm/60)**2)*(self.diameter**4))
+        self.ct = self.thrust /(self.p*((self.rpm/60)**2)*(self.diameter**4))
         return self.ct
 
     def Cp(self):
-        power_required = self.Thrust*self.flgiht_speed
-        self.cp = (power_required)/(self.p*((self.rpm/60)**3)*(self.diameter**5))
+        self.power_flight = self.thrust*self.flight_speed
+        self.cp = (self.power_flight)/(self.p*((self.rpm/60)**3)*(self.diameter**5))
         return self.cp
 
     def Efficiency(self):
-        self.Ct()
-        self.Cp()
-        self.advance_ratio()
-        self.efficiency = (self.ct*self.Jo)/self.cp
+        self.power_flight = self.thrust*self.flight_speed
+        self.power_momentum = self.momentum * self.rpm*2*np.pi/60
+        self.efficiency = 1-(self.power_flight /self.power_momentum)**-1
         return  self.efficiency
 
     def plot_blade(self):
