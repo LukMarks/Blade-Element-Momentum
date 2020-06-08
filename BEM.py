@@ -6,6 +6,7 @@ import subprocess as sp
 from mpl_toolkits.mplot3d import Axes3D
 
 
+
 class blade:
     def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, changes_section, g, p, u):
         
@@ -42,12 +43,12 @@ class blade:
 
         return
 
-    def config(self, correction = True, speed_test = False, export_sections = True):
+    def config(self, correction = True, speed_test = False, export_sections = False, show_coefficient = False):
         
         self.correction = correction
         self.speed_test = speed_test 
         self.export_sections = export_sections
-
+        self.show_coefficient = show_coefficient
         return
 
     def twist_angle_reference(self,theta_ref):
@@ -58,7 +59,7 @@ class blade:
 
     def advance_ratio(self):
         
-        self.Jo = self.flgiht_speed*(self.diameter/(self.rpm/60))
+        self.Jo = self.flgiht_speed/(self.diameter*(self.rpm/60))
         
         return
 
@@ -84,7 +85,7 @@ class blade:
         return
     
     def xfoil(self,inter = 200 , np = 220):
-        #TODO fix convergencie
+
         Coef = list()
         os.remove("xfoil_output.txt")
         itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', round(self.ma,2),int(self.re),inter,np]
@@ -236,7 +237,8 @@ class blade:
             F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
 
             self.xfoil()
-            print("Cl: ",self.Cl,"       " ,"Cd: ",self.Cd)
+            if self.show_coefficient:
+                print("Cl: ",self.Cl,"       " ,"Cd: ",self.Cd)
             L = (1/2)*self.p*self.chord[i]*self.Cl*v_rel**2
             Dr = (1/2)*self.p*self.chord[i]*self.Cd*v_rel**2 
             Cn = self.Cl*np.cos(Phi)+self.Cd*np.sin(Phi)
@@ -266,6 +268,8 @@ class blade:
             self.pn.append((1/2)*self.p*self.chord[i]*Cn*v_rel**2)
             self.pt.append((1/2)*self.p*self.chord[i]*Ct*v_rel**2)
             
+            self.build_geometry(i)
+
             if self.export_sections:
                 self.export_section(i)
                 
@@ -398,14 +402,21 @@ class blade:
             x.append(xrot)
             y.append(yrot)
         return x,y
-    
-    def export_section(self,i):
-        
-        tks,pos= self.airfoil_max_thickness(self.current_airfoil)
 
+
+    def build_geometry(self,i):
+        tks,pos= self.airfoil_max_thickness(self.current_airfoil)
         G = self.rotational_matrix(self.current_airfoil, self.chord[i], self.phi[i], pos, tks, i)
         self.x = G[0]
         self.y = G[1]
+        self.z=[]
+        for j in range(len(self.x)):
+            self.z.append(self.radius)
+
+        return
+    
+    def export_section(self,i):
+        
         n = self.radius[i]*1000
         name_file = 'R'+str(int(n))+'.txt'
 
@@ -425,7 +436,6 @@ class blade:
     def cad_priveiw(self):
         fig = plt.figure(20)
         ax = fig.add_subplot(111, projection='3d')
-
-        #Axes3D.scatter(xs=t, ys=p, zs=v, zdir='z', s=20, c=None, depthshade=True)
-        ax.scatter(self.x, self.y, self.radius)
+        ax.scatter(self.x, self.y, self.z)
+        plt.show()
         return
