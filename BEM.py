@@ -83,6 +83,13 @@ class blade:
             self.current_alfa = self.angle_of_attack[self.current_section]     
         
         return
+
+    def export(self,var, name = "value"):
+        file_name = name+".dat"
+        f = open(file_name,'w')
+        for value in var:
+            f.write('%s \n' % (value))
+        return
     
     def xfoil(self,inter = 200 , np = 220):
 
