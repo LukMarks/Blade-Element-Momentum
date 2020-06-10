@@ -299,7 +299,7 @@ class blade:
 
         self.thrust = self.thrust*self.number_blades
         self.momentum = self.momentum*self.number_blades        
-
+        self.power_flight = self.thrust*self.flight_speed
         return
 
     def Ct(self):
@@ -307,12 +307,11 @@ class blade:
         return self.ct
 
     def Cp(self):
-        self.power_flight = self.thrust*self.flight_speed
+        
         self.cp = (self.power_flight)/(self.p*((self.rpm/60)**3)*(self.diameter**5))
         return self.cp
 
     def Efficiency(self):
-        self.power_flight = self.thrust*self.flight_speed
         self.power_momentum = self.momentum * self.rpm*2*np.pi/60
         self.efficiency = 1-(self.power_flight /self.power_momentum)**-1
         return  self.efficiency
