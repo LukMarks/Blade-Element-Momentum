@@ -5,8 +5,6 @@ import platform
 import subprocess as sp
 from mpl_toolkits.mplot3d import Axes3D
 
-
-
 class blade:
     def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, changes_section, g, p, u):
         
@@ -43,12 +41,13 @@ class blade:
 
         return
 
-    def config(self, correction = True, speed_test = False, export_sections = False, show_coefficient = False):
+    def config(self, correction = True, speed_test = False, export_sections = False, show_coefficient = False, theta_reference = None):
         
         self.correction = correction
         self.speed_test = speed_test 
         self.export_sections = export_sections
         self.show_coefficient = show_coefficient
+        self.theta_ref = theta_reference
         return
 
     def twist_angle_reference(self,theta_ref):
@@ -195,9 +194,9 @@ class blade:
 
     def velocity_curve(self, Theta, theta_ref):
 
-        gamma= theta_ref*np.pi/180 - Theta
-        print("Gamma angle: ",round(gamma*180/np.pi,1))
-        self.current_alfa += (gamma*180/np.pi)
+        gamma= theta_ref - Theta
+        print("Gamma angle: ",round(gamma,1))
+        self.current_alfa += (gamma)
         print("New Alfa angle: ",round(self.current_alfa ,1))
         phi = (theta_ref+ self.current_alfa)*np.pi/180  
         
@@ -222,8 +221,8 @@ class blade:
             if self.speed_test:
                 Phi = self.velocity_curve(self.theta[-1],self.theta_ref[i])
 
-            self.phi.append(Phi)
-            self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
+            #self.phi.append(Phi)
+            #self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
 
             v_rel = (self.flight_speed**2+(Vt)**2)**(1/2)
             V_relS = self.flight_speed*(1+self.a[i])
