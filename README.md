@@ -33,7 +33,7 @@ First things first, the main file here is the [BEM.py](https://github.com/LukMar
 
 The gif right below shows the program up and running using **Xfoil** functionatilies.
 
-![runner](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/src%20images/bem.gif)
+![runner](https://github.com/LukMarks/Blade-Element-Momentum/blob/R2018/src%20images/bem.gif)
 
 ## Results
 
@@ -62,13 +62,13 @@ Maximum external diameter:  10.0 mm
 
 ```
 With it several plots will be displayed, The following images illutrate some examples.
-![angle](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/src%20images/twist_angle.png)
+![angle](https://github.com/LukMarks/Blade-Element-Momentum/blob/R2018/src%20images/twist_angle.png)
 
-![shape](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/src%20images/shape.png)
+![shape](https://github.com/LukMarks/Blade-Element-Momentum/blob/R2018/src%20images/shape.png)
 
-![Cl_Cd](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/src%20images/cl_cd_ratio.png)
+![Cl_Cd](https://github.com/LukMarks/Blade-Element-Momentum/blob/R2018/src%20images/cl_cd_ratio.png)
 
-You can also use the [solid.py](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/solid.py) to export each section as a dat extension. This files are built rotating and positioning every section, like the next image shows. 
+You can also use the [solid.py](https://github.com/LukMarks/Blade-Element-Momentum/blob/R2018/solid.py) to export each section as a dat extension. This files are built rotating and positioning every section, like the next image shows. 
 
 ![section](https://github.com/LukMarks/Blade-Element-Momentum/blob/master/src%20images/blade_section.png)
 
