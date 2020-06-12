@@ -31,13 +31,9 @@ The gif right below shows the program up and running using **Xfoil** functionati
 
 ## Results
 
-At the end of the calculation your console will show the final values for your design, like the next few lines show:
+At the end of the calculation your console you could see the final values for your design, like the next few lines show:
 
 ```
-Time elapsed (m:s):  0.0 : 7.0
-
-Results: 
-
 Thurst:  59.99 [N]
 
 Momentum:  4.05 [Nm]
@@ -49,13 +45,8 @@ Required Power:  762.46 [W]
 Flight Power:  720.0 [W]
 
 Efficiency:  94.42 [%]
-
-Section(s) failed to converge 0 
-
-Maximum external diameter:  10.0 mm
-
 ```
-With it several plots will be displayed, The following images illutrate some examples.
+With it several plots might be displayed, The following images illutrate some examples.
 ![angle](https://github.com/LukMarks/Blade-Element-Momentum/blob/R2018/src%20images/twist_angle.png)
 
 ![shape](https://github.com/LukMarks/Blade-Element-Momentum/blob/R2018/src%20images/shape.png)
