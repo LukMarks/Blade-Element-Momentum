@@ -5,50 +5,51 @@ import platform
 import subprocess as sp
 from mpl_toolkits.mplot3d import Axes3D
 
-
-
 class blade:
     def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, changes_section, g, p, u):
         
-        self.flight_speed = v
-        self.rpm = rpm
-        self.number_blades = B
-        self.diameter = d
-        self.radius = r
-        self.chord = c
-        self.angle_of_attack = alfa
-        self.airfoil = airfoil
+        self.flight_speed = v # flgiht speed
+        self.rpm = rpm # rotation per minutes
+        self.number_blades = B # quantity of blades
+        self.diameter = d # propeller diameter 
+        self.radius = r # radius's points for the calculations
+        self.chord = c # chord's points for the calculations
+        self.angle_of_attack = alfa # angle of attack for each airfoil
+        self.airfoil = airfoil # airfoils that will be used
         self.g = g # gravity acceleration
         self.p = p #specific mass
         self.u = u #dynamic viscosity
 
         self.current_section = 0 #initial section
-        self.changes_section = changes_section
+        self.changes_section = changes_section # point's that occurs a airfoil/angle of attack changes
 
         self.a = [0] # induced factor
-        self.a_l = [0] # radial imduced factor
-        self.a_critic = 0.4
+        self.a_l = [0] # radial induced factor
+        self.a_critic = 0.4 # critial value for induced factor
 
         self.w = self.rpm*2*np.pi/60 #angular speed
 
-        self.phi = []
-        self.theta = [] # twist angle
+        self.phi = [] #[rad] twist angle for the velocity 
+        self.theta = [] #[degree] twist angle of the blade
 
         self.reynolds = []
         self.mach = []
-        self.v_sound = 343 #[m/s]
+        self.v_sound = 343 #[m/s] speed of the sound
 
         self.pn = []
         self.pt = []
 
         return
 
-    def config(self, correction = True, speed_test = False, export_sections = False, show_coefficient = False):
+    def config(self, correction = True, speed_test = False, export_sections = False, show_coefficient = False, theta_reference = None):
+
+        # This function configures some secundaries features 
         
-        self.correction = correction
-        self.speed_test = speed_test 
-        self.export_sections = export_sections
-        self.show_coefficient = show_coefficient
+        self.correction = correction # Enabel Hansen's corrections calculations
+        self.speed_test = speed_test # Compares and change the current angle of attack besaed in a theta angle reference
+        self.export_sections = export_sections # Enabel an exportations of each sections in .dat files
+        self.show_coefficient = show_coefficient # shows Cl and Cd values of each section in the terminal
+        self.theta_ref = theta_reference # Assign a reference for the theta angle (speed test must be enable to work properly)
         return
 
     def twist_angle_reference(self,theta_ref):
@@ -74,6 +75,10 @@ class blade:
         return self.ma
 
     def select_section(self,current_radius):
+        
+        # This functions manage the values for the current seciton
+        # based in the values of changes_section list
+
         if current_radius <= self.changes_section[self.current_section]:
             self.current_airfoil = self.airfoil[self.current_section]
             self.current_alfa = self.angle_of_attack[self.current_section]
@@ -83,8 +88,20 @@ class blade:
             self.current_alfa = self.angle_of_attack[self.current_section]     
         
         return
+
+    def export(self,var, name = "value"):
+
+        #this function export any internal variables
+
+        file_name = name+".dat"
+        f = open(file_name,'w')
+        for value in var:
+            f.write('%s \n' % (value))
+        return
     
     def xfoil(self,inter = 200 , np = 220):
+
+        # This function uses some Xfoils calculations to retrieve the values for Cl and Cd
 
         Coef = list()
         os.remove("xfoil_output.txt")
@@ -188,9 +205,13 @@ class blade:
 
     def velocity_curve(self, Theta, theta_ref):
 
-        gamma= theta_ref*np.pi/180 - Theta
-        print("Gamma angle: ",round(gamma*180/np.pi,1))
-        self.current_alfa += (gamma*180/np.pi)
+        # This functions makes a correction for
+        # the 'new' angle of attack if speed test 
+        # is enable
+
+        gamma= theta_ref - Theta
+        print("Gamma angle: ",round(gamma,1))
+        self.current_alfa += (gamma)
         print("New Alfa angle: ",round(self.current_alfa ,1))
         phi = (theta_ref+ self.current_alfa)*np.pi/180  
         
@@ -198,6 +219,8 @@ class blade:
 
     def induced_factor(self):
 
+        # This functions starts the BEM Method 
+        # with the induced factors of each section
 
         for i in range(len(self.radius)):
             if self.radius[i] != self.radius[-1]:
@@ -210,13 +233,10 @@ class blade:
             self.phi.append(Phi)
             self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
 
-            #todo add here function to speed variations test
 
             if self.speed_test:
                 Phi = self.velocity_curve(self.theta[-1],self.theta_ref[i])
 
-            self.phi.append(Phi)
-            self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
 
             v_rel = (self.flight_speed**2+(Vt)**2)**(1/2)
             V_relS = self.flight_speed*(1+self.a[i])
@@ -277,6 +297,12 @@ class blade:
         return
 
     def forces(self):
+
+
+        # This functions ends the BEM Method 
+        # integranting the total thrust and
+        # momentum
+
         self.thrust = 0
         self.momentum = 0
 
@@ -299,7 +325,7 @@ class blade:
 
         self.thrust = self.thrust*self.number_blades
         self.momentum = self.momentum*self.number_blades        
-
+        self.power_flight = self.thrust*self.flight_speed
         return
 
     def Ct(self):
@@ -307,12 +333,11 @@ class blade:
         return self.ct
 
     def Cp(self):
-        self.power_flight = self.thrust*self.flight_speed
+        
         self.cp = (self.power_flight)/(self.p*((self.rpm/60)**3)*(self.diameter**5))
         return self.cp
 
     def Efficiency(self):
-        self.power_flight = self.thrust*self.flight_speed
         self.power_momentum = self.momentum * self.rpm*2*np.pi/60
         self.efficiency = 1-(self.power_flight /self.power_momentum)**-1
         return  self.efficiency
@@ -335,6 +360,11 @@ class blade:
 
 
     def airfoil_max_thickness(self,airfoil):
+
+        # This functions read a airfoil file
+        # and calculates the maximum thickness
+        # and the chord's point where that occours
+
         x = []
         y = []
         yu = []
@@ -378,6 +408,11 @@ class blade:
 
 
     def rotational_matrix(self,airfoil,c,phi,x_t,tks,i):
+
+        # This function read the original airfoils and
+        # and change them for the blade's 
+        # corresponding sections coordenates
+
         x = []
         y = []
         yu = []
@@ -415,6 +450,9 @@ class blade:
         return
     
     def export_section(self,i):
+
+        # This functions export the sections coordenates
+        # in a .dat file
         
         n = self.radius[i]*1000
         name_file = 'R'+str(int(n))+'.txt'
