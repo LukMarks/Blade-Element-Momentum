@@ -58,11 +58,12 @@ class blade:
         
         return
 
+    
     def advance_ratio(self):
         
-        self.Jo = self.flight_speed/(self.diameter*(self.rpm/60))
-        
-        return
+        self.advance_ratio = self.flight_speed/(self.diameter*(self.rpm/60))
+       
+        return self.advance_ratio
 
     def reynolds_number(self,v,c):
 
@@ -99,12 +100,12 @@ class blade:
             f.write('%s \n' % (value))
         return
     
-    def xfoil(self,inter = 200 , np = 220):
+    def xfoil(self,inter = 50 , np = 220):
 
         # This function uses some Xfoils calculations to retrieve the values for Cl and Cd
-
         Coef = list()
-        os.remove("xfoil_output.txt")
+        if os.path.isfile("xfoil_output.txt"):
+            os.remove("xfoil_output.txt")
         itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', round(self.ma,2),int(self.re),inter,np]
 
         if platform.system() =='Linux':
@@ -126,7 +127,6 @@ class blade:
             os.system('del dump')
             os.system('del xfoil_input')
             os.system('del screen')
-            os.system('del xfoil_output')
             f=open('xfoil_input.txt','w')
             f.write('%s \n' % ('load'))
             f.write('%s \n' % (itens[0]))
@@ -164,28 +164,30 @@ class blade:
         xutr = list()
         xltr = list()
 
-        f      = open('xfoil_output.txt','r')
+        if os.path.isfile("xfoil_output.txt"):
+            f      = open('xfoil_output.txt','r')
 
-        for line in f:
-            if (i > 11):
+            for line in f:
+                if (i > 11):
 
-                aoa.append(line.strip().split()[0])
-                cl.append(line.strip().split()[1])
-                cd.append(line.strip().split()[2])
-                cdp.append(line.strip().split()[3])
-                cm.append(line.strip().split()[4])
-                xutr.append(line.strip().split()[5])
-                xltr.append(line.strip().split()[6])
-                #print((line.strip().split()[6]))
-                res = float(line.strip().split()[2])
-            else:
-                res = 1.0
-            i += 1
+                    aoa.append(line.strip().split()[0])
+                    cl.append(line.strip().split()[1])
+                    cd.append(line.strip().split()[2])
+                    cdp.append(line.strip().split()[3])
+                    cm.append(line.strip().split()[4])
+                    xutr.append(line.strip().split()[5])
+                    xltr.append(line.strip().split()[6])
+                    #print((line.strip().split()[6]))
+                    res = float(line.strip().split()[2])
+                else:
+                    res = 1.0
+                i += 1
 
-        f.close()
+            f.close()
 
             #colocar maximo
         j = 0
+
 
         if len(cl)==0:
             self.Cl =0.0000001
@@ -209,13 +211,13 @@ class blade:
         # the 'new' angle of attack if speed test 
         # is enable
 
-        gamma= theta_ref - Theta
+        gamma= (theta_ref - Theta)*180/np.pi
         print("Gamma angle: ",round(gamma,1))
-        self.current_alfa += (gamma)
+        self.current_alfa += gamma
         print("New Alfa angle: ",round(self.current_alfa ,1))
-        phi = (theta_ref+ self.current_alfa)*np.pi/180  
+        #phi = (theta_ref+ self.current_alfa)*np.pi/180  
         
-        return phi
+        return 
 
     def induced_factor(self):
 
@@ -235,7 +237,7 @@ class blade:
 
 
             if self.speed_test:
-                Phi = self.velocity_curve(self.theta[-1],self.theta_ref[i])
+                self.velocity_curve(self.phi[-1],self.theta_ref[i])
 
 
             v_rel = (self.flight_speed**2+(Vt)**2)**(1/2)
@@ -276,9 +278,9 @@ class blade:
             if self.correction :
 
                 if self.a[i] >self.a_critic :
-                    a.pop()
+                    self.a.pop()
                     K_h = 4*F*np.sin(Phi)**2/(sigma*Cn)
-                    a.append((1/2)*(2+K_h*(1-2*ac)-((K_h*(1-2*ac)+2)**2+4*(K_h*ac**2-1))**(1/2)))
+                    self.a.append((1/2)*(2+K_h*(1-2*self.a_critic)-((K_h*(1-2*self.a_critic)+2)**2+4*(K_h*self.a_critic**2-1))**(1/2)))
 
                 if self.a[i] <= (1/3):
                     Ct = 4*self.a[i]*(1-self.a[i])*F
