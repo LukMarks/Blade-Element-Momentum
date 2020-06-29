@@ -58,11 +58,12 @@ class blade:
         
         return
 
+    
     def advance_ratio(self):
         
-        self.Jo = self.flight_speed/(self.diameter*(self.rpm/60))
-        
-        return
+        self.advance_ratio = self.flight_speed/(self.diameter*(self.rpm/60))
+       
+        return self.advance_ratio
 
     def reynolds_number(self,v,c):
 
@@ -99,7 +100,7 @@ class blade:
             f.write('%s \n' % (value))
         return
     
-    def xfoil(self,inter = 200 , np = 220):
+    def xfoil(self,inter = 50 , np = 220):
 
         # This function uses some Xfoils calculations to retrieve the values for Cl and Cd
         Coef = list()
@@ -210,13 +211,13 @@ class blade:
         # the 'new' angle of attack if speed test 
         # is enable
 
-        gamma= theta_ref - Theta
+        gamma= (theta_ref - Theta)*180/np.pi
         print("Gamma angle: ",round(gamma,1))
-        self.current_alfa += (gamma)
+        self.current_alfa += gamma
         print("New Alfa angle: ",round(self.current_alfa ,1))
-        phi = (theta_ref+ self.current_alfa)*np.pi/180  
+        #phi = (theta_ref+ self.current_alfa)*np.pi/180  
         
-        return phi
+        return 
 
     def induced_factor(self):
 
@@ -236,7 +237,7 @@ class blade:
 
 
             if self.speed_test:
-                Phi = self.velocity_curve(self.theta[-1],self.theta_ref[i])
+                self.velocity_curve(self.phi[-1],self.theta_ref[i])
 
 
             v_rel = (self.flight_speed**2+(Vt)**2)**(1/2)
