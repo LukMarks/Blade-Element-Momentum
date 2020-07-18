@@ -4,6 +4,7 @@ import os
 import platform
 import subprocess as sp
 from mpl_toolkits.mplot3d import Axes3D
+import math
 
 class blade:
     def __init__(self, v, rpm, B, d, r, c,alfa,airfoil, changes_section, g, p, u):
@@ -41,7 +42,7 @@ class blade:
 
         return
 
-    def config(self, correction = True, speed_test = False, export_sections = False, show_coefficient = False, theta_reference = None):
+    def config(self, correction = True, speed_test = False, export_sections = False, show_coefficient = False, theta_reference = None, max_ite = 100):
 
         # This function configures some secundaries features 
         
@@ -50,6 +51,7 @@ class blade:
         self.export_sections = export_sections # Enabel an exportations of each sections in .dat files
         self.show_coefficient = show_coefficient # shows Cl and Cd values of each section in the terminal
         self.theta_ref = theta_reference # Assign a reference for the theta angle (speed test must be enable to work properly)
+        self.max_ite = int(max_ite) # induced factors maximum number of iterations
         return
 
     def twist_angle_reference(self,theta_ref):
@@ -58,7 +60,7 @@ class blade:
         
         return
 
-    
+        
     def advance_ratio(self):
         
         self.advance_ratio = self.flight_speed/(self.diameter*(self.rpm/60))
@@ -106,7 +108,7 @@ class blade:
         Coef = list()
         if os.path.isfile("xfoil_output.txt"):
             os.remove("xfoil_output.txt")
-        itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', round(self.ma,2),int(self.re),inter,np]
+        itens  = [self.current_airfoil,self.current_alfa, self.current_alfa, '0', round(self.ma,2),self.re,inter,np]
 
         if platform.system() =='Linux':
                
@@ -219,81 +221,112 @@ class blade:
         
         return 
 
+    
     def induced_factor(self):
 
         # This functions starts the BEM Method 
         # with the induced factors of each section
-
+        
         for i in range(len(self.radius)):
-            if self.radius[i] != self.radius[-1]:
-                self.select_section(self.radius[i])
+            converge = False
+            count = 0
+            while(not converge):
+ 
+                if self.radius[i] != self.radius[-1]:
+                    self.select_section(self.radius[i])
+                
+                print("progress: ", i/len(self.radius), " %")
+                #print(self.a)
+                Vt = self.w * self.radius[i]
+                Tan_phi = ((1+self.a[i])*self.flight_speed)/((1-self.a_l[i])*Vt)
+                
+                
+                v_rel = (self.flight_speed**2+(Vt)**2)**(1/2)
+                V_relS = self.flight_speed*(1+self.a[i])
+                V_relC = Vt*(1-self.a_l[i])
+                v_abs = (V_relS**2+V_relC**2)**(1/2)
+
+                if Tan_phi < 1e-10 :
+                    Tan_phi = 1e-6
+                Phi = np.arctan(Tan_phi)
+                self.phi.append(Phi)
+                self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
+
+
+                if self.speed_test:
+                    self.velocity_curve(self.phi[-1],self.theta_ref[i])
+                
+
+                re = self.reynolds_number(v_abs,self.chord[i])
+                self.reynolds.append(re)
+
+                ma = self.mach_number(v_abs,self.v_sound)
+                self.mach.append(ma)
+
+                Lambda = self.flight_speed/Vt
+
+                f = (self.number_blades/2)*(1/Lambda)*(1+Lambda**2)**(1/2)*(1-(self.radius[i]/(self.diameter/2)))
+
+                F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
+
+                self.xfoil()
+                if self.show_coefficient:
+                    print("Cl: ",self.Cl,"       " ,"Cd: ",self.Cd)
+                #self.Cl = 1.
+                #self.Cd = 1e-4
+                L = (1/2)*self.p*self.chord[i]*self.Cl*v_rel**2
+                Dr = (1/2)*self.p*self.chord[i]*self.Cd*v_rel**2 
+                Cn = self.Cl*np.cos(Phi)-self.Cd*np.sin(Phi)
+                Ct = self.Cl*np.sin(Phi)+self.Cd*np.cos(Phi)*self.radius[i]
+                
+                sigma = self.chord[i]*self.number_blades/(2*np.pi*self.radius[i])
+                I1 = 4*np.sin(Phi)**2
+                I2 = sigma*Cn
+                self.a.append(1/((I1/I2)-1))
+                
+                I3 = 4*np.sin(Phi)*np.cos(Phi)
+                I4 = sigma*Ct
+                self.a_l.append(1/((I3/I4)+1))
+
+                Pn = ((1/2)*self.p*self.chord[i]*Cn*v_rel**2)
+                Pt = ((1/2)*self.p*self.chord[i]*Ct*v_rel**2)
+
+                a = self.a[i]
+                al = self.a_l[i]
+                if self.correction :
+
+                    anew = Pn/(4*np.pi*self.radius[i]*self.p*v_rel**2+(1+a))
+                    alnew = Pt/(4*np.pi*self.radius[i]**3*self.p*v_rel*(1+a)*self.rpm)
+
+                    amiddle = (anew+a)/2
+                    almiddle = (alnew +al)/2
+                    print("a: ",abs(amiddle-a),"     ","a_l: ",almiddle-al)
+                    if abs(amiddle-a) < 1e-2 and abs(almiddle-al) <1e-2:
+                        converge = True
+
+                    self.a[i] = amiddle
+                    self.a_l[i] = almiddle
+                    count +=1
+                    if count ==  self.max_ite: 
+                        converge = True
+                    '''
+                    if self.a[i] >self.a_critic :
+                        self.a.pop()
+                        K_h = 4*F*np.sin(Phi)**2/(sigma*Cn)
+                        self.a.append((1/2)*(2+K_h*(1-2*self.a_critic)-((K_h*(1-2*self.a_critic)+2)**2+4*(K_h*self.a_critic**2-1))**(1/2)))
+
+                    if self.a[i] <= (1/3):
+                        Ct = 4*self.a[i]*(1-self.a[i])*F
+                    else:
+                        Ct = 4*self.a[i]*(1-(1/4)*(5-3*self.a[i])*self.a[i])*F'''
+
+            self.pn.append(Pn)
+            self.pt.append(Pt)
             
-            
-            Vt = self.w * self.radius[i]
-            Tan_phi = Tan_phi = ((1+self.a[i])*self.flight_speed)/((1-self.a_l[i])*Vt)
-            Phi = np.arctan(Tan_phi)
-            self.phi.append(Phi)
-            self.theta.append((Phi-self.current_alfa*(np.pi/180))*180/np.pi)
+            #self.build_geometry(i)
 
-
-            if self.speed_test:
-                self.velocity_curve(self.phi[-1],self.theta_ref[i])
-
-
-            v_rel = (self.flight_speed**2+(Vt)**2)**(1/2)
-            V_relS = self.flight_speed*(1+self.a[i])
-            V_relC = Vt*(1-self.a_l[i])
-
-            v_abs = (V_relS**2+V_relC**2)**(1/2)
-
-            re = self.reynolds_number(v_abs,self.chord[i])
-            self.reynolds.append(re)
-
-            ma = self.mach_number(v_abs,self.v_sound)
-            self.mach.append(ma)
-
-            Lambda = self.flight_speed/Vt
-
-            f = (self.number_blades/2)*(1/Lambda)*(1+Lambda**2)**(1/2)*(1-(self.radius[i]/(self.diameter/2)))
-
-            F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
-
-            self.xfoil()
-            if self.show_coefficient:
-                print("Cl: ",self.Cl,"       " ,"Cd: ",self.Cd)
-            L = (1/2)*self.p*self.chord[i]*self.Cl*v_rel**2
-            Dr = (1/2)*self.p*self.chord[i]*self.Cd*v_rel**2 
-            Cn = self.Cl*np.cos(Phi)+self.Cd*np.sin(Phi)
-            Ct = self.Cl*np.sin(Phi)-self.Cd*np.cos(Phi)
-            
-            sigma = self.chord[i]*self.number_blades/(2*np.pi*self.radius[i])
-            I1 = 4*np.sin(Phi)**2
-            I2 = sigma*Cn
-            self.a.append(1/((I1/I2)-1))
-            
-            I3 = 4*np.sin(Phi)*np.cos(Phi)
-            I4 = sigma*Ct
-            self.a_l.append(1/((I3/I4)+1))
-
-            if self.correction :
-
-                if self.a[i] >self.a_critic :
-                    self.a.pop()
-                    K_h = 4*F*np.sin(Phi)**2/(sigma*Cn)
-                    self.a.append((1/2)*(2+K_h*(1-2*self.a_critic)-((K_h*(1-2*self.a_critic)+2)**2+4*(K_h*self.a_critic**2-1))**(1/2)))
-
-                if self.a[i] <= (1/3):
-                    Ct = 4*self.a[i]*(1-self.a[i])*F
-                else:
-                    Ct = 4*self.a[i]*(1-(1/4)*(5-3*self.a[i])*self.a[i])*F
-
-            self.pn.append((1/2)*self.p*self.chord[i]*Cn*v_rel**2)
-            self.pt.append((1/2)*self.p*self.chord[i]*Ct*v_rel**2)
-            
-            self.build_geometry(i)
-
-            if self.export_sections:
-                self.export_section(i)
+            #if self.export_sections:
+            #    self.export_section(i)
                 
 
         return
@@ -325,10 +358,22 @@ class blade:
                 M = (1/3)* Yt*(self.radius[i+1]**3-self.radius[i]**3)+(1/2)*St*(self.radius[i+1]**2-self.radius[i]**2)
                 self.momentum = (self.momentum+M)
 
-        self.thrust = self.thrust*self.number_blades
-        self.momentum = self.momentum*self.number_blades        
+        self.thrust = self.thrust#*self.number_blades
+        self.momentum = self.momentum#*self.number_blades        
         self.power_flight = self.thrust*self.flight_speed
         return
+
+    def force_test(self):
+
+        self.T = 0
+        self.Q = 0
+
+        for i in range(len(self.radius)):
+            self.T = self.T + self.pn[i]
+            self.Q = self.Q + self.pt[i]
+
+        return
+
 
     def Ct(self):
         self.ct = self.thrust /(self.p*((self.rpm/60)**2)*(self.diameter**4))
@@ -341,7 +386,7 @@ class blade:
 
     def Efficiency(self):
         self.power_momentum = self.momentum * self.rpm*2*np.pi/60
-        self.efficiency = 1-(self.power_flight /self.power_momentum)**-1
+        self.efficiency = self.advance_ratio()*self.Ct()/self.Cp() #1-(self.power_flight /self.power_momentum)**-1
         return  self.efficiency
 
     def plot_blade(self):
