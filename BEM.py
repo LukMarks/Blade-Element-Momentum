@@ -24,8 +24,8 @@ class blade:
         self.current_section = 0 #initial section
         self.changes_section = changes_section # point's that occurs a airfoil/angle of attack changes
 
-        self.a = [0] # induced factor
-        self.a_l = [0] # radial induced factor
+        self.a = [] # induced factor
+        self.a_l = [] # radial induced factor
         self.a_critic = 0.4 # critial value for induced factor
 
         self.w = self.rpm*2*np.pi/60 #angular speed
@@ -230,12 +230,14 @@ class blade:
         for i in range(len(self.radius)):
             converge = False
             count = 0
+            self.a.append(.1)
+            self.a_l.append(.01)
+
             while(not converge):
- 
                 if self.radius[i] != self.radius[-1]:
                     self.select_section(self.radius[i])
                 
-                print("progress: ", i/len(self.radius), " %")
+                print("progress: ",round(i/len(self.radius)*100,2), " %")
                 #print(self.a)
                 Vt = self.w * self.radius[i]
                 Tan_phi = ((1+self.a[i])*self.flight_speed)/((1-self.a_l[i])*Vt)
@@ -269,11 +271,11 @@ class blade:
 
                 F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
 
-                self.xfoil()
-                if self.show_coefficient:
-                    print("Cl: ",self.Cl,"       " ,"Cd: ",self.Cd)
-                #self.Cl = 1.
-                #self.Cd = 1e-4
+                #self.xfoil()
+                #if self.show_coefficient:
+                #    print("Cl: ",self.Cl,"       " ,"Cd: ",self.Cd)
+                self.Cl = 1.
+                self.Cd = 1e-4
                 L = (1/2)*self.p*self.chord[i]*self.Cl*v_rel**2
                 Dr = (1/2)*self.p*self.chord[i]*self.Cd*v_rel**2 
                 Cn = self.Cl*np.cos(Phi)-self.Cd*np.sin(Phi)
@@ -282,30 +284,30 @@ class blade:
                 sigma = self.chord[i]*self.number_blades/(2*np.pi*self.radius[i])
                 I1 = 4*np.sin(Phi)**2
                 I2 = sigma*Cn
-                self.a.append(1/((I1/I2)-1))
+                a = (1/((I1/I2)-1))
                 
                 I3 = 4*np.sin(Phi)*np.cos(Phi)
                 I4 = sigma*Ct
-                self.a_l.append(1/((I3/I4)+1))
+                a_l = (1/((I3/I4)+1))
+
+                self.a[i] = a
+                self.a_l[i]
 
                 Pn = ((1/2)*self.p*self.chord[i]*Cn*v_rel**2)
                 Pt = ((1/2)*self.p*self.chord[i]*Ct*v_rel**2)
 
-                a = self.a[i]
-                al = self.a_l[i]
+
                 if self.correction :
 
                     anew = Pn/(4*np.pi*self.radius[i]*self.p*v_rel**2+(1+a))
                     alnew = Pt/(4*np.pi*self.radius[i]**3*self.p*v_rel*(1+a)*self.rpm)
 
                     amiddle = (anew+a)/2
-                    almiddle = (alnew +al)/2
-                    print("a: ",abs(amiddle-a),"     ","a_l: ",almiddle-al)
-                    if abs(amiddle-a) < 1e-2 and abs(almiddle-al) <1e-2:
+                    almiddle = (alnew +a_l)/2
+                    print("a: ",abs(amiddle-a),"     ","a_l: ",almiddle-a_l)
+                    if abs(amiddle-a) < 1e-2 and abs(almiddle-a_l) <1e-2:
                         converge = True
 
-                    self.a[i] = amiddle
-                    self.a_l[i] = almiddle
                     count +=1
                     if count ==  self.max_ite: 
                         converge = True
@@ -322,6 +324,9 @@ class blade:
 
             self.pn.append(Pn)
             self.pt.append(Pt)
+
+            #self.a.append(a)
+            #self.a_l.append(a_l)
             
             #self.build_geometry(i)
 
@@ -340,15 +345,17 @@ class blade:
 
         self.thrust = 0
         self.momentum = 0
-
+        self.T_tes = 0
         for i in range(len(self.radius)-1):
             #Axial forces
                 Yn = (self.pn[i+1]-self.pn[i])/(self.radius[i+1]-self.radius[i])
                 Sn = (self.pn[i]*self.radius[i+1]-self.pn[i+1]*self.radius[i])/(self.radius[i+1]-self.radius[i])
-                PN = Yn*self.radius[i] + Sn
+                PN = Yn*self.radius[i] + Sn 
 
                 T = (1/2)* Yn*(self.radius[i+1]**2-self.radius[i]**2)+Sn*(self.radius[i+1]-self.radius[i])
                 self.thrust = (self.thrust+T)
+                dt = 4*np.pi*self.radius[-1] * self.p * self.flight_speed*self.a[i]*(1+self.a[i])*(self.radius[i]-self.radius[i-1])
+                self.T_tes = self.T_tes+dt
 
             #Radial forces
 
@@ -369,8 +376,8 @@ class blade:
         self.Q = 0
 
         for i in range(len(self.radius)):
-            self.T = self.T + self.pn[i]
-            self.Q = self.Q + self.pt[i]
+            self.T = self.T + self.pn[i] *0.05
+            self.Q = self.Q + self.pt[i] *0.05
 
         return
 
@@ -387,6 +394,7 @@ class blade:
     def Efficiency(self):
         self.power_momentum = self.momentum * self.rpm*2*np.pi/60
         self.efficiency = self.advance_ratio()*self.Ct()/self.Cp() #1-(self.power_flight /self.power_momentum)**-1
+        self.test_efi = self.power_flight /self.power_momentum
         return  self.efficiency
 
     def plot_blade(self):
