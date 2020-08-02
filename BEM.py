@@ -271,11 +271,11 @@ class blade:
 
                 F = (2/np.pi)*(np.arctan((np.exp(2*f)-1)**(1/2)))
 
-                #self.xfoil()
-                #if self.show_coefficient:
-                #    print("Cl: ",self.Cl,"       " ,"Cd: ",self.Cd)
-                self.Cl = 1.
-                self.Cd = 1e-4
+                self.xfoil()
+                if self.show_coefficient:
+                    print("Cl: ",self.Cl,"       " ,"Cd: ",self.Cd)
+                #self.Cl = 1.
+                #self.Cd = 1e-4
                 L = (1/2)*self.p*self.chord[i]*self.Cl*v_rel**2
                 Dr = (1/2)*self.p*self.chord[i]*self.Cd*v_rel**2 
                 Cn = self.Cl*np.cos(Phi)-self.Cd*np.sin(Phi)
@@ -290,8 +290,18 @@ class blade:
                 I4 = sigma*Ct
                 a_l = (1/((I3/I4)+1))
 
+                if self.a[i] >self.a_critic :
+                    K_h = 4*F*np.sin(Phi)**2/(sigma*Cn)
+                    a=((1/2)*(2+K_h*(1-2*self.a_critic)-((K_h*(1-2*self.a_critic)+2)**2+4*(K_h*self.a_critic**2-1))**(1/2)))
+
+
                 self.a[i] = a
                 self.a_l[i]
+
+                if self.a[i] <= (1/3):
+                    Ct = 4*self.a[i]*(1-self.a[i])*F
+                else:
+                    Ct = 4*self.a[i]*(1-(1/4)*(5-3*self.a[i])*self.a[i])*F
 
                 Pn = ((1/2)*self.p*self.chord[i]*Cn*v_rel**2)
                 Pt = ((1/2)*self.p*self.chord[i]*Ct*v_rel**2)
@@ -304,10 +314,14 @@ class blade:
 
                     amiddle = (anew+a)/2
                     almiddle = (alnew +a_l)/2
-                    print("a: ",abs(amiddle-a),"     ","a_l: ",almiddle-a_l)
+                    print("\n=======================================")
+                    print("a: ",a,"     ","a_l: ",a_l)
+                    print("anew: ",anew,"     ","a_lnew: ",alnew)
+                    print("amiddle: ",amiddle,"     ","almiddle: ",almiddle)
+                    print("Da: ",abs(amiddle-a),"     ","Da_l: ",(almiddle-a_l))
+                    print("=======================================")
                     if abs(amiddle-a) < 1e-2 and abs(almiddle-a_l) <1e-2:
                         converge = True
-
                     count +=1
                     if count ==  self.max_ite: 
                         converge = True
@@ -348,25 +362,25 @@ class blade:
         self.T_tes = 0
         for i in range(len(self.radius)-1):
             #Axial forces
-                Yn = (self.pn[i+1]-self.pn[i])/(self.radius[i+1]-self.radius[i])
-                Sn = (self.pn[i]*self.radius[i+1]-self.pn[i+1]*self.radius[i])/(self.radius[i+1]-self.radius[i])
-                PN = Yn*self.radius[i] + Sn 
+                An = (self.pn[i+1]-self.pn[i])/(self.radius[i+1]-self.radius[i])
+                Bn = (self.pn[i+1]*self.radius[i+1]-self.pn[i]*self.radius[i])/(self.radius[i+1]-self.radius[i])
+                Pn = An*self.radius[i] + Bn 
 
-                T = (1/2)* Yn*(self.radius[i+1]**2-self.radius[i]**2)+Sn*(self.radius[i+1]-self.radius[i])
+                T = (1/2)* An*(self.radius[i+1]**2-self.radius[i]**2)+Bn*(self.radius[i+1]-self.radius[i])
                 self.thrust = (self.thrust+T)
                 dt = 4*np.pi*self.radius[-1] * self.p * self.flight_speed*self.a[i]*(1+self.a[i])*(self.radius[i]-self.radius[i-1])
-                self.T_tes = self.T_tes+dt
+                self.T_tes = self.T_tes+Pn*(self.radius[i+1]-self.radius[i])
 
             #Radial forces
 
-                Yt = (self.pt[i+1]-self.pt[i])/(self.radius[i+1]-self.radius[i])
-                St = (self.pt[i]*self.radius[i+1]-self.pt[i+1]*self.radius[i])/(self.radius[i+1]-self.radius[i])
-                PT = Yt*self.radius[i] + St
-                M = (1/3)* Yt*(self.radius[i+1]**3-self.radius[i]**3)+(1/2)*St*(self.radius[i+1]**2-self.radius[i]**2)
+                At = (self.pt[i+1]-self.pt[i])/(self.radius[i+1]-self.radius[i])
+                Bt = (self.pt[i+1]*self.radius[i+1]-self.pt[i]*self.radius[i])/(self.radius[i+1]-self.radius[i])
+                PT = At*self.radius[i] + Bt
+                M = (1/3)* At*(self.radius[i+1]**3-self.radius[i]**3)+(1/2)*Bt*(self.radius[i+1]**2-self.radius[i]**2)
                 self.momentum = (self.momentum+M)
 
-        self.thrust = self.thrust#*self.number_blades
-        self.momentum = self.momentum#*self.number_blades        
+        self.thrust = self.thrust*self.number_blades
+        self.momentum = self.momentum*self.number_blades        
         self.power_flight = self.thrust*self.flight_speed
         return
 
