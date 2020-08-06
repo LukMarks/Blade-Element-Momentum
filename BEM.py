@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import platform
+from scipy.integrate import quad
 import subprocess as sp
 from mpl_toolkits.mplot3d import Axes3D
 import math
@@ -394,6 +395,193 @@ class blade:
             self.Q = self.Q + self.pt[i] *0.05
 
         return
+
+
+    def I1_prime(self, r, zeta, cl, cd):
+        ksi = r/self.radius[-1]
+        omega = self.w
+        Lambda = self.flight_speed/(r*omega)
+        index = int(len(self.radius)*ksi)
+        tan_phiT = Lambda*(1+zeta/2)
+        phiT = np.arctan(tan_phiT)
+        phi = (np.arctan(tan_phiT/ksi))
+        tan_phi = np.tan(phi)
+        f = (self.number_blades/2)*(1-ksi)/np.sin(phiT)
+        F = (np.arctan(np.exp(2*f)-1**.5))
+        G = F*np.sin(phi)*np.cos(phi)*(r*omega)/self.flight_speed
+        re = self.reynolds_number(self.flight_speed,self.chord[index])
+        self.reynolds.append(re)
+        ma = self.mach_number(self.flight_speed,self.v_sound)
+        self.mach.append(ma)
+        #self.xfoil()
+        epsilon = cd[index]/cl[index]
+        i1 = 4*ksi*G*(1-epsilon*tan_phi)
+        return i1
+
+    def I2_prime(self, r, zeta, cl, cd):
+        ksi = r/self.radius[-1]
+        omega = self.w
+        Lambda = self.flight_speed/(r*omega)
+        index = int(len(self.radius)*ksi)
+        tan_phiT = Lambda*(1+zeta/2)
+        phiT = np.arctan(tan_phiT)
+        phi = (np.arctan(tan_phiT/ksi))
+        tan_phi = np.tan(phi)
+        f = (self.number_blades/2)*(1-ksi)/np.sin(phiT)
+        F = (np.arctan(np.exp(2*f)-1**.5))
+        G = F*np.sin(phi)*np.cos(phi)*(r*omega)/self.flight_speed
+        re = self.reynolds_number(self.flight_speed,self.chord[index])
+        self.reynolds.append(re)
+        ma = self.mach_number(self.flight_speed,self.v_sound)
+        self.mach.append(ma)
+        #self.xfoil()
+        epsilon = cd[index]/cl[index]
+        i2 = Lambda*(self.I1_prime(r, zeta, cl, cd)/ksi)*(1+epsilon/tan_phi)*np.sin(phi)*np.cos(phi)
+        return i2
+
+
+    def J1_prime(self, r, zeta, cl, cd):
+        ksi = r/self.radius[-1]
+        omega = self.w
+        Lambda = self.flight_speed/(r*omega)
+        index = int(len(self.radius)*ksi)
+        tan_phiT = Lambda*(1+zeta/2)
+        phiT = np.arctan(tan_phiT)
+        phi = (np.arctan(tan_phiT/ksi))
+        tan_phi = np.tan(phi)
+        f = (self.number_blades/2)*(1-ksi)/np.sin(phiT)
+        F = (np.arctan(np.exp(2*f)-1**.5))
+        G = F*np.sin(phi)*np.cos(phi)*(r*omega)/self.flight_speed
+        re = self.reynolds_number(self.flight_speed,self.chord[index])
+        self.reynolds.append(re)
+        ma = self.mach_number(self.flight_speed,self.v_sound)
+        self.mach.append(ma)
+        #self.xfoil()
+        epsilon = cd[index]/cl[index]
+        j1 = 4*ksi*G*(1+epsilon/tan_phi)
+        return j1
+
+
+    def J2_prime(self, r, zeta, cl, cd):
+        ksi = r/self.radius[-1]
+        omega = self.w
+        Lambda = self.flight_speed/(r*omega)
+        index = int(len(self.radius)*ksi)
+        tan_phiT = Lambda*(1+zeta/2)
+        phiT = np.arctan(tan_phiT)
+        phi = (np.arctan(tan_phiT/ksi))
+        tan_phi = np.tan(phi)
+        f = (self.number_blades/2)*(1-ksi)/np.sin(phiT)
+        F = (np.arctan(np.exp(2*f)-1**.5))
+        G = F*np.sin(phi)*np.cos(phi)*(r*omega)/self.flight_speed
+        re = self.reynolds_number(self.flight_speed,self.chord[index])
+        self.reynolds.append(re)
+        ma = self.mach_number(self.flight_speed,self.v_sound)
+        self.mach.append(ma)
+        #self.xfoil()
+        epsilon = cd[index]/cl[index]
+        j2 = (self.J1_prime(r, zeta, cl, cd))*(1-epsilon*tan_phi)*np.cos(phi)**2
+        return j2
+
+
+    def I1(self, zeta, cl, cd):
+        i1 = quad(self.I1_prime,self.radius[0],self.radius[-1], args=(zeta, cl, cd))      
+        return i1[0]
+    def I2(self, zeta, cl, cd):
+        i2 = quad(self.I2_prime,self.radius[0],self.radius[-1], args=(zeta, cl, cd))      
+        return i2[0]
+    def J1(self, zeta, cl, cd):
+        j1 = quad(self.J1_prime,self.radius[0],self.radius[-1], args=(zeta, cl, cd))      
+        return j1[0]
+    def J2(self, zeta, cl, cd):
+        j2 = quad(self.J2_prime,self.radius[0],self.radius[-1], args=(zeta, cl, cd))      
+        return j2[0]
+
+
+    def lieback_optimun_design(self):
+        # step 1
+        zeta = 1
+        F=[None]*len(self.radius)
+        phi =[None]*len(self.radius)
+        W = [None]*len(self.radius)
+        Wc = [None]*len(self.radius)
+        cl =[None]*len(self.radius)
+        cd = [None]*len(self.radius)
+        Chord = [None]*len(self.radius)
+        Twist = [None]*len(self.radius)
+        omega = self.w
+        converge = False
+        ite=1
+        while not converge:
+            print("======================\n NEW ITERATION\n ======================")
+            for i in range(len(self.radius)):
+                
+                # step 2
+                if self.radius[i] != self.radius[-1]:
+                    self.select_section(self.radius[i])
+                Lambda = self.flight_speed/(self.radius[i]*omega)
+                x = self.w*self.radius[i]/self.flight_speed
+                ksi = self.radius[i]/self.radius[-1]
+                tan_phiT = Lambda*(1+zeta/2)
+                phiT = np.arctan(tan_phiT)
+                phi[i] = (np.arctan(tan_phiT/ksi))
+                f = (self.number_blades/2)*(1-ksi)/np.sin(phiT)
+                F[i] = (np.arctan(np.exp(2*f)-1**.5))
+                
+                # step 3
+
+                re = self.reynolds_number(self.flight_speed,self.chord[i])
+                self.reynolds.append(re)
+                ma = self.mach_number(self.flight_speed,self.v_sound)
+                self.mach.append(ma)
+                self.xfoil()
+                epsilon = self.Cd/self.Cl
+                cd[i] = self.Cd
+                cl[i] = self.Cl
+                G = F[i]*np.sin(phi[i])*np.cos(phi[i])*(self.radius[i]*omega)/self.flight_speed
+                wc = 4*np.pi*Lambda*G*self.flight_speed*self.radius[-1]*ksi/(self.Cl*self.number_blades)
+                Wc[i] = (wc)
+                
+                # step 6
+
+                a = (zeta/2)*(np.cos(phi[i])**2)*(1-epsilon*np.tan(phi[i]))
+                al = (zeta/(2*x))*np.cos(phi[i])*np.sin(phi[i])*(1+epsilon/np.tan(phi[i]))
+                w = self.flight_speed*(1+a)/np.sin(phi[i])
+                wt = self.flight_speed*ksi*np.sin(phi[i])*np.cos(phi[i])
+                circulation = 2*np.pi*self.radius[i]*F[i]*wt/self.number_blades
+                W[i] = (w)
+                
+                # step 7
+
+                chord = 2*circulation/(w*self.Cl)
+                twist = phi[i]*180/np.pi + self.current_alfa
+                Chord[i]=(chord)
+                Twist[i]=(twist)
+                # step 8
+                
+            print(ite)
+            self.power_constraint=300
+            Pc = 2*self.power_constraint/(self.p*(self.flight_speed)**2*np.pi*(self.radius[-1]**2))
+            new_zeta = -(self.J1(zeta, cl, cd)/(self.J2(zeta, cl, cd))*2)+((self.J1(zeta, cl, cd)/(self.J2(zeta, cl, cd))*2)**2 + Pc/self.J2(zeta, cl, cd))**.5
+            print(new_zeta)
+            print(abs((new_zeta)/new_zeta))
+            if(abs((new_zeta-zeta)/new_zeta) <1e-4):
+                converge = True
+            else:
+                zeta = new_zeta
+                ite +=1
+        Tc = self.I1(zeta, cl, cd)*zeta-self.I2(zeta, cl, cd)*zeta**2
+        T = self.p*(self.flight_speed**2)*np.pi*(self.radius[-1]**2)*Tc/2
+
+        print(Chord,"\n")
+        print(Twist,"\n")
+
+        print(T)
+        print(Tc/Pc)
+        
+        return
+
+
 
 
     def Ct(self):
